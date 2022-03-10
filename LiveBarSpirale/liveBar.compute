@@ -1,0 +1,78 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+#pragma kernel Draw
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+float radius;
+float epaisseur;
+float procent;
+float4 Color;
+float4 Color2;
+
+[numthreads(20, 20, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+    {
+    float center = 200.0f;
+
+    procent = 720.0f;
+
+    float procent2 = procent % 360.0f;
+
+    uint2 idN = uint2(id.x, id.y);
+
+    float estCoord = step(center, id.x);
+
+    float alpha = atan2((id.y - center), (id.x - center)) * 57.0f;
+    alpha = alpha + 360.0f * step(alpha, 0.0f);
+    float alpha2 = alpha + 360 * step(360, procent);
+
+    // TODO: insert actual code here!
+    float a = step(distance(float2(center, center), idN), (radius / 2 + epaisseur) * alpha / 360.0f + 5.0f) * step(alpha, procent);
+    float b = step((radius / 2 * alpha) / 360.0f - 5.0f, distance(float2(center, center), idN));
+
+    float c = step(distance(float2(center, center), idN), (radius / 2 + epaisseur) * alpha2 / 360.0f + 5.0f) * step(alpha2, procent);
+    float d = step((radius / 2 * alpha2) / 360.0f - 5.0f, distance(float2(center, center), idN));
+
+       
+    float Res = (a * b + c * d); // * step(alpha, procent);
+    Res = step(0.5, Res);
+
+    float4 resoltColor = lerp(float4(0, 0, 0, 0), Color, Res);
+
+    Result[int2(id.x, id.y)] = resoltColor;
+    }
+
+[numthreads(20, 20, 1)]
+void Draw(uint3 id : SV_DispatchThreadID)
+    {
+    float center = 200.0f;
+
+    procent = procent * 7.2f;
+
+    float procent2 = procent % 360.0f;
+
+    uint2 idN = uint2(id.x, id.y);
+
+    float estCoord = step(center, id.x);
+
+    float alpha = atan2((id.y - center), (id.x - center)) * 57.0f;
+    alpha = alpha + 360.0f * step(alpha, 0.0f);
+    float alpha2 = alpha + 360 * step(360, procent);
+
+    // TODO: insert actual code here!
+    float a = step(distance(float2(center, center), idN), (radius / 2 + epaisseur) * alpha / 360.0f + 5.0f) * step(alpha, procent);
+    float b = step((radius / 2 * alpha) / 360.0f - 5.0f, distance(float2(center, center), idN));
+
+    float c = step(distance(float2(center, center), idN), (radius / 2 + epaisseur) * alpha2 / 360.0f + 5.0f) * step(alpha2, procent);
+    float d = step((radius / 2 * alpha2) / 360.0f - 5.0f, distance(float2(center, center), idN));
+
+       
+    float Res = (a * b + c * d); // * step(alpha, procent);
+    Res = step(0.5, Res);
+
+    float4 resoltColor = lerp(Result[int2(id.x, id.y)], Color2, Res);
+
+    Result[int2(id.x, id.y)] = resoltColor;
+    }
